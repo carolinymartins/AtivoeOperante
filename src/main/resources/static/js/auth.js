@@ -6,27 +6,27 @@ async function login(email, senha) {
 
         const response = await fetch(`${API_BASE_URL}/apis/acesso/autenticar?login=${encodeURIComponent(email)}&senha=${senha}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
+            headers: { 'Content-Type': 'application/json' }
         });
 
         if (!response.ok) {
             const error = await response.text();
-            throw new Error(error || 'Email ou senha inválidos');
+            try {
+                const json = JSON.parse(error);
+                throw new Error(json.mensagem || 'E-mail ou senha inválidos.');
+            } catch {
+                throw new Error('E-mail ou senha inválidos.');
+            }
         }
 
         const token = await response.text();
-
         authToken = token;
         userEmail = email;
-
         localStorage.setItem('token', token);
         localStorage.setItem('userEmail', email);
 
         showAlert(`Bem-vindo, ${email}!`, 'success');
 
-        // Redirecionar baseado no email
         if (email === 'admin@pm.br') {
             window.location.href = 'admin.html';
         } else {
@@ -45,7 +45,7 @@ async function register(cpf, email, senha) {
         showLoading(true);
 
         const usuario = {
-            cpf: cpf,
+            cpf: parseInt(cpf),   // CPF como número (Long no backend)
             email: email,
             senha: parseInt(senha),
             nivel: 2
@@ -57,7 +57,13 @@ async function register(cpf, email, senha) {
         showLogin();
 
     } catch (error) {
-        showAlert(error.message, 'error');
+        // Tenta extrair mensagem do JSON de erro
+        try {
+            const json = JSON.parse(error.message);
+            showAlert(json.mensagem || error.message, 'error');
+        } catch {
+            showAlert(error.message, 'error');
+        }
     } finally {
         showLoading(false);
     }

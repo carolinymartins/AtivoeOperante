@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -32,7 +31,6 @@ public class CidadaoRestController {
     @Autowired
     OrgaoService orgaoService;
 
-    // verifica token e nivel
     private ResponseEntity<Object> validarAcessoCidadao() {
         String token = request.getHeader("Authorization");
 
@@ -43,7 +41,7 @@ public class CidadaoRestController {
         io.jsonwebtoken.Claims detalhes = JWTTokenProvider.getAllClaimsFromToken(token);
         if (detalhes != null && detalhes.get("nivel") != null) {
             String nivel = detalhes.get("nivel").toString();
-            if (nivel.equals("1")) { // 1 = Administrador (Impede a prefeitura de usar rotas do cidadão)
+            if (nivel.equals("1")) {
                 return new ResponseEntity<>("Acesso restrito ao cidadão", HttpStatus.FORBIDDEN);
             }
         }
@@ -52,7 +50,6 @@ public class CidadaoRestController {
 
     // ================================================= DENÚNCIAS ============================================================================
 
-    // Adicionar denúncia
     @PostMapping(value = "/denuncias", consumes = "multipart/form-data")
     public ResponseEntity<Object> adicionarDenuncia(
             @RequestPart("denuncia") Denuncia denuncia,
@@ -82,7 +79,6 @@ public class CidadaoRestController {
             return ResponseEntity.badRequest().body(new Erro("Erro ao cadastrar a denúncia!"));
     }
 
-    // para consguir testar por enquanto passa o id do usuario direto como param
     @GetMapping("/denuncias/usuario/{usuarioId}")
     public ResponseEntity<Object> buscarDenunciasDoUsuario(@PathVariable Long usuarioId) {
         ResponseEntity<Object> erroAcesso = validarAcessoCidadao();
@@ -98,27 +94,33 @@ public class CidadaoRestController {
 
     @GetMapping("/denuncias/usuario/minhas")
     public ResponseEntity<Object> buscarDenunciasDoUsuario(@RequestHeader("Authorization") String token) {
+        System.out.println(">>> TOKEN RECEBIDO: " + token);
+
         ResponseEntity<Object> erroAcesso = validarAcessoCidadao();
         if (erroAcesso != null) return erroAcesso;
 
         String tokenLimpo = token.replace("Bearer ", "");
-        if (!JWTTokenProvider.verifyToken(tokenLimpo))
-            return new ResponseEntity<>("Token inválido ou expirado", HttpStatus.UNAUTHORIZED);
+        System.out.println(">>> TOKEN LIMPO: " + tokenLimpo);
+        System.out.println(">>> VERIFY: " + JWTTokenProvider.verifyToken(tokenLimpo));
 
         io.jsonwebtoken.Claims detalhes = JWTTokenProvider.getAllClaimsFromToken(tokenLimpo);
+        System.out.println(">>> CLAIMS: " + detalhes);
+        System.out.println(">>> ID RAW: " + detalhes.get("id"));
+        System.out.println(">>> ID CLASSE: " + detalhes.get("id").getClass().getName());
+
         try {
             Long usuarioId = Long.parseLong(detalhes.get("id").toString());
+            System.out.println(">>> USUARIO ID: " + usuarioId);
             List<Denuncia> minhasDenuncias = denunciaService.buscarDenunciaPorUsuarioId(usuarioId);
             return ResponseEntity.ok(minhasDenuncias);
         } catch (Exception e) {
+            System.out.println(">>> ERRO: " + e.getMessage());
             return ResponseEntity.badRequest().body(new Erro("ID do usuário no token é inválido."));
         }
     }
 
-
     // ================================================= TIPOS ============================================================================
 
-    //listar tipos
     @GetMapping("/tipos-all")
     public ResponseEntity<Object> buscarTipos() {
         ResponseEntity<Object> erroAcesso = validarAcessoCidadao();
@@ -138,7 +140,4 @@ public class CidadaoRestController {
         List<Orgao> orgaoList = orgaoService.buscarOrgaos();
         return ResponseEntity.ok(orgaoList);
     }
-
-
-
 }

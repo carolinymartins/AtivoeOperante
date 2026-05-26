@@ -9,8 +9,15 @@ async function carregarDashboardCidadao() {
             carregarMinhasDenuncias()
         ]);
 
-        // Configurar eventos
         document.getElementById('formDenuncia')?.addEventListener('submit', enviarDenuncia);
+
+        // Define data máxima como hoje e preenche com hoje por padrão
+        const inputData = document.getElementById('denunciaData');
+        if (inputData) {
+            const hoje = new Date().toISOString().split('T')[0];
+            inputData.max = hoje;
+            inputData.value = hoje;
+        }
 
         mostrarSecao('novaDenuncia');
 
@@ -80,10 +87,16 @@ async function enviarDenuncia(e) {
             return;
         }
 
+        const dataValor = document.getElementById('denunciaData').value;
+        if (!dataValor) {
+            showAlert('Selecione uma data válida.', 'error');
+            return;
+        }
+
         const denuncia = {
             titulo: document.getElementById('denunciaTitulo').value,
             texto: document.getElementById('denunciaDescricao').value,
-            dataHora: document.getElementById('denunciaData').value + 'T00:00:00',
+            dataHora: dataValor + 'T00:00:00',
             urgencia: parseInt(document.getElementById('denunciaUrgencia').value),
             orgao: { id: parseInt(document.getElementById('denunciaOrgao').value) },
             tipo: { id: parseInt(document.getElementById('denunciaTipo').value) },
@@ -94,7 +107,7 @@ async function enviarDenuncia(e) {
         formData.append('denuncia', new Blob([JSON.stringify(denuncia)], { type: 'application/json' }));
 
         const fotoInput = document.getElementById('denunciaFoto');
-        if (fotoInput.files.length > 0) {
+        if (fotoInput && fotoInput.files.length > 0) {
             formData.append('foto', fotoInput.files[0]);
         }
 
@@ -105,11 +118,26 @@ async function enviarDenuncia(e) {
         document.getElementById('denunciaUrgencia').value = '3';
         document.getElementById('urgenciaValue').textContent = '3';
 
+        const hoje = new Date().toISOString().split('T')[0];
+        document.getElementById('denunciaData').value = hoje;
+        document.getElementById('denunciaData').max = hoje;
+
     } catch (error) {
         showAlert(error.message, 'error');
     } finally {
         showLoading(false);
     }
+}
+
+// Formata LocalDateTime
+function formatarData(dataHora) {
+    if (!dataHora) return 'N/A';
+    const data = new Date(dataHora);
+    return data.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
 }
 
 async function carregarMinhasDenuncias() {
@@ -139,7 +167,7 @@ async function carregarMinhasDenuncias() {
                     <div class="denuncia-titulo">${denuncia.titulo}</div>
                     <div class="denuncia-descricao">${denuncia.texto}</div>
                     <div class="denuncia-meta">
-                        <div><strong>Data:</strong> ${new Date(denuncia.dataHora).toLocaleDateString()}</div>
+                        <div><strong>Data:</strong> ${formatarData(denuncia.dataHora)}</div>
                         <div><strong>Órgão:</strong> ${denuncia.orgao?.nome || 'N/A'}</div>
                         <div><strong>Tipo:</strong> ${denuncia.tipo?.nome || 'N/A'}</div>
                     </div>
@@ -154,7 +182,7 @@ async function carregarMinhasDenuncias() {
                         <div class="feedback">
                             <strong><i class="fas fa-comment"></i> Feedback:</strong>
                             <p>${denuncia.feedback.texto}</p>
-                            <small>${denuncia.feedback.data ? new Date(denuncia.feedback.data).toLocaleString() : ''}</small>
+                            <small>${denuncia.feedback.data ? formatarData(denuncia.feedback.data) : ''}</small>
                         </div>
                     ` : ''}
                 </div>

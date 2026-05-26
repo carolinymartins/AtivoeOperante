@@ -39,7 +39,6 @@
             </form>
 
             <hr style="margin: 1.5rem 0;">
-
             <p style="text-align: center;">
                 Não tem conta? <a href="#" onclick="showRegister()" style="color: #667eea; text-decoration: none; font-weight: 600;">Cadastre-se</a>
             </p>
@@ -54,30 +53,32 @@
                 <h2 style="margin-top: 1rem; color: #667eea;">Cadastro de Cidadão</h2>
             </div>
 
-            <form id="registerForm">
+            <form id="registerForm" novalidate>
                 <div class="form-group">
                     <label>CPF</label>
-                    <input type="text" id="registerCpf" placeholder="000.000.000-00" required
-                           oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')"
-                           maxlength="14">
+                    <input type="text" id="registerCpf" placeholder="000.000.000-00"
+                           maxlength="14" required inputmode="numeric">
+                    <small id="cpfErro" style="color:#e53e3e; display:none;"></small>
                 </div>
                 <div class="form-group">
                     <label>Email</label>
                     <input type="email" id="registerEmail" placeholder="seu@email.com" required>
+                    <small id="emailErro" style="color:#e53e3e; display:none;"></small>
                 </div>
                 <div class="form-group">
                     <label>Senha</label>
                     <input type="password" id="registerSenha" placeholder="••••••" required>
+                    <small id="senhaErro" style="color:#e53e3e; display:none;"></small>
                 </div>
                 <div class="form-group">
                     <label>Confirmar Senha</label>
                     <input type="password" id="registerConfirmSenha" placeholder="••••••" required>
+                    <small id="confirmSenhaErro" style="color:#e53e3e; display:none;"></small>
                 </div>
                 <button type="submit" class="btn-primary" style="width: 100%;">Cadastrar</button>
             </form>
 
             <hr style="margin: 1.5rem 0;">
-
             <p style="text-align: center;">
                 Já tem conta? <a href="#" onclick="showLogin()" style="color: #667eea; text-decoration: none; font-weight: 600;">Faça login</a>
             </p>
@@ -88,59 +89,6 @@
 <script src="js/utils.js"></script>
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
-<script>
-    // Controle de telas
-    function showLogin() {
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('registerScreen').classList.add('hidden');
-    }
-
-    function showRegister() {
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('registerScreen').classList.remove('hidden');
-    }
-
-    // Login
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const senha = document.getElementById('loginSenha').value;
-        await login(email, senha);
-    });
-
-    // Cadastro
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const cpf = document.getElementById('registerCpf').value.replace(/[^0-9]/g, '');
-        const email = document.getElementById('registerEmail').value;
-        const senha = document.getElementById('registerSenha').value;
-        const confirmSenha = document.getElementById('registerConfirmSenha').value;
-
-        if (senha !== confirmSenha) {
-            showAlert('As senhas não coincidem!', 'error');
-            return;
-        }
-
-        if (cpf.length !== 11) {
-            showAlert('CPF inválido!', 'error');
-            return;
-        }
-
-        await register(cpf, email, senha);
-    });
-
-    // Verificar se já está logado
-    const savedToken = localStorage.getItem('token');
-    const savedEmail = localStorage.getItem('userEmail');
-    if (savedToken && savedEmail) {
-        authToken = savedToken;
-        userEmail = savedEmail;
-        if (savedEmail === 'admin@pm.br') {
-            window.location.href = 'admin.html';
-        } else {
-            window.location.href = 'cidadao.html';
-        }
-    }
-</script>
+<script src="js/index.js"></script>
 </body>
 </html>

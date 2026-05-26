@@ -23,7 +23,7 @@ public class JWTTokenProvider {
                 .claim("nivel", nivel)
                 .claim("id", id)
                 .setIssuedAt(new Date())
-                .setExpiration(Date.from(LocalDateTime.now().plusMinutes(15L)
+                .setExpiration(Date.from(LocalDateTime.now().plusMinutes(60L)
                         .atZone(ZoneId.systemDefault()).toInstant()))
                 .signWith(CHAVE)
                 .compact();
@@ -58,6 +58,4 @@ public class JWTTokenProvider {
         }
         return claims;
     }
-
 }
-

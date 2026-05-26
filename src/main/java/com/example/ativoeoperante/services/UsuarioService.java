@@ -1,5 +1,5 @@
 package com.example.ativoeoperante.services;
-import com.example.ativoeoperante.entities.Erro;
+
 import com.example.ativoeoperante.entities.Usuario;
 import com.example.ativoeoperante.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,23 +12,26 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    public List<Usuario> buscarTodosUsuarios(){
-        List<Usuario> usuarioList = usuarioRepository.findAll();
-        return usuarioList;
+    public List<Usuario> buscarTodosUsuarios() {
+        return usuarioRepository.findAll();
     }
 
-    public boolean verificarEmail(String email){
-        Usuario usuarioEncontrado = usuarioRepository.findByEmail(email);
-        return usuarioEncontrado == null;
+    public boolean verificarEmail(String email) {
+        return usuarioRepository.findByEmail(email) == null;
     }
 
-    public Usuario inserirUsuario(Usuario novoUsuario){
-        if(verificarEmail(novoUsuario.getEmail())){
-            novoUsuario.setNivel(2);
-            novoUsuario = usuarioRepository.save(novoUsuario);
-            return novoUsuario;
+    public boolean verificarCpf(Long cpf) {
+        return usuarioRepository.findByCpf(cpf) == null;
+    }
+
+    public Usuario inserirUsuario(Usuario novoUsuario) {
+        if (!verificarEmail(novoUsuario.getEmail())) {
+            return null;
         }
-        return null;
+        if (!verificarCpf(novoUsuario.getCpf())) {
+            return null;
+        }
+        novoUsuario.setNivel(2);
+        return usuarioRepository.save(novoUsuario);
     }
-
 }
